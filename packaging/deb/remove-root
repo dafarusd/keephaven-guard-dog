@@ -1,0 +1,29 @@
+#!/bin/sh
+# "Remove Keephaven Guard Dog" (apps menu), run by pkexec after the admin password, from bin/remove-app: removes the
+# package. People, findings and saved pages stay in /var/lib/keephaven-guard-dog; only a purge deletes them.
+# Takes no arguments and trusts nothing from the environment. apt deletes this file while it runs, so the whole body
+# is one function the shell has read before it starts, and nothing after apt-get reads /opt.
+# Exit: 0 removed, 3 another program holds the package lock (no waiting, no retry), 1 anything else.
+main() {
+    set -eu
+    PATH=/usr/sbin:/usr/bin:/sbin:/bin
+    export PATH
+    umask 077
+    rc=0
+    out=$(DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=0 remove -y keephaven-guard-dog 2>&1) || rc=$?
+    if [ "$rc" = 0 ]; then
+        echo "removed"
+        return 0
+    fi
+    case "$out" in
+        *"Could not get lock"*|*"Unable to acquire the dpkg frontend lock"*|*"Unable to lock"*)
+            echo "another program is installing or updating software right now"
+            return 3 ;;
+    esac
+    line=$(printf '%s\n' "$out" | grep '^E:' | tail -n 1) || true
+    [ -n "$line" ] || line=$(printf '%s\n' "$out" | tail -n 1)
+    echo "$line"
+    return 1
+}
+main
+exit $?

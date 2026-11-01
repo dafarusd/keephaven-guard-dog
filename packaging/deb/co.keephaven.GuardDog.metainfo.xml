@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>co.keephaven.GuardDog</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <name>Keephaven Guard Dog</name>
+  <summary>Find where you show up online and get removed</summary>
+  <developer id="co.keephaven">
+    <name>Keephaven LLC</name>
+  </developer>
+  <description>
+    <p>Finds where you show up online, helps you get removed, and keeps watching. It runs on your own computer.</p>
+    <ul>
+      <li>Searches 17 people-search sites for each name and place, and breach lists for each email.</li>
+      <li>Scans again every 6 hours by default (Settings, 1 to 720 hours, or 0 for only when you press Scan) and tells you about new listings, listings that come back, and new breaches.</li>
+    </ul>
+  </description>
+  <pkgname>keephaven-guard-dog</pkgname>
+  <launchable type="desktop-id">keephaven-guard-dog.desktop</launchable>
+  <icon type="stock">security-high</icon>
+  <url type="homepage">https://keephaven.co</url>
+  <categories>
+    <category>Network</category>
+    <category>Security</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-10-31"/>
+  </releases>
+</component>

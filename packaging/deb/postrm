@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+# Removing the package keeps the people, findings and saved pages in /var/lib/keephaven-guard-dog: they're the
+# owner's. Only a purge (apt purge, chosen on purpose) removes them.
+if [ "$1" = "purge" ]; then
+    rm -rf /var/lib/keephaven-guard-dog
+fi
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+fi
+exit 0

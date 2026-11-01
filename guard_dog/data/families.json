@@ -1,0 +1,126 @@
+{
+ "built": "2026-10-29",
+ "method": "Read on each site's own privacy, terms and opt-out pages by plain fetch on 2026-10-29 (tools/find_families.py and the checks recorded below). A family is sites run by one operator. one_removal is true only where a member's own opt-out page sends you to another member's.",
+ "families": [
+  {
+   "id": "spokeo",
+   "name": "Spokeo",
+   "members": [
+    "spokeo",
+    "anywho"
+   ],
+   "one_removal": "spokeo",
+   "evidence": [
+    {
+     "site": "anywho",
+     "url": "https://www.anywho.com/optout",
+     "status": 308,
+     "fetched": "2026-10-29",
+     "quote": "answers 308, moving to https://www.spokeo.com/optout"
+    },
+    {
+     "site": "anywho",
+     "url": "https://www.anywho.com/privacy",
+     "fetched": "2026-10-29",
+     "quote": "names Spokeo, Inc. as the company"
+    }
+   ],
+   "evidence_strength": "named"
+  },
+  {
+   "id": "whitepages",
+   "name": "Whitepages",
+   "members": [
+    "whitepages",
+    "411"
+   ],
+   "one_removal": "",
+   "evidence": [
+    {
+     "site": "411",
+     "url": "https://www.411.com/privacy",
+     "status": 200,
+     "fetched": "2026-10-29",
+     "quote": "names Whitepages, Inc."
+    },
+    {
+     "site": "411",
+     "url": "https://www.411.com/suppression-requests",
+     "status": 404,
+     "fetched": "2026-10-29",
+     "quote": "411.com has no removal page of its own at this address (404); nothing on its pages says Whitepages' removal covers it"
+    }
+   ],
+   "evidence_strength": "named"
+  },
+  {
+   "id": "truepeoplesearch",
+   "name": "TruePeopleSearch and its sister sites",
+   "members": [
+    "truepeoplesearch",
+    "fastpeoplesearch",
+    "cyberbackgroundchecks",
+    "advancedbackgroundchecks",
+    "peoplesearchnow",
+    "searchpeoplefree",
+    "familytreenow"
+   ],
+   "one_removal": "",
+   "evidence": [
+    {
+     "site": "all seven",
+     "url": "https://www.<site>.com/terms",
+     "fetched": "2026-10-29",
+     "quote": "Each site's terms of service are 94-98% the same text as TruePeopleSearch's, each naming itself the \"Company\" that grants access to \"our sites\""
+    },
+    {
+     "site": "familytreenow",
+     "url": "https://www.familytreenow.com/terms",
+     "fetched": "2026-10-29",
+     "quote": "FamilyTreeNow's terms mention TruePeopleSearch.com"
+    }
+   ],
+   "evidence_strength": "inferred"
+  },
+  {
+   "id": "lifetimevalue",
+   "name": "BeenVerified and its sister sites (The Lifetime Value Co.)",
+   "members": [
+    "beenverified",
+    "peoplelooker",
+    "neighborwho"
+   ],
+   "one_removal": "",
+   "evidence": [
+    {
+     "site": "beenverified",
+     "url": "https://www.beenverified.com/faq/privacy/",
+     "fetched": "2026-10-29",
+     "quote": "This website is owned and operated by The Lifetime Value Co. LLC."
+    },
+    {
+     "site": "peoplelooker",
+     "url": "https://www.peoplelooker.com/privacy-policy/",
+     "fetched": "2026-10-29",
+     "quote": "(our website) is provided by The Lifetime Value Co"
+    },
+    {
+     "site": "neighborwho",
+     "url": "https://www.neighborwho.com/privacy-policy/",
+     "fetched": "2026-10-29",
+     "quote": "(our website) is provided by The Lifetime Value Co"
+    }
+   ],
+   "evidence_strength": "named"
+  }
+ ],
+ "not_used": [
+  {
+   "id": "intelius",
+   "reason": "owns US Search, but neither site is on Guard Dog's scan list or verified email list",
+   "url": "https://www.ussearch.com/privacy-policy/",
+   "fetched": "2026-10-29",
+   "quote": "the information processing practices of Intelius LLC, the owner of US Search"
+  }
+ ]
+}

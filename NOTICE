@@ -1,0 +1,24 @@
+Keephaven Guard Dog
+Copyright (c) 2026 Keephaven LLC.
+
+LICENSE
+
+Guard Dog's own code is licensed under the GNU Affero General Public
+License, version 3 only (AGPL-3.0-only). See LICENSE for the full text.
+That covers the source and the .deb packages built from it.
+
+COMMERCIAL LICENSING
+
+Keephaven LLC holds the copyright in Guard Dog's own code and can license
+it under separate commercial terms, for example for OEM integration,
+white-label distribution, or products that can't meet the AGPL's
+conditions. Contact: partnerships@keephaven.co
+
+A commercial license covers only Guard Dog's own code. Python, Scrapling
+and the other packages the .deb carries keep their own licenses, and so do
+the projects Guard Dog learned from (see THIRD-PARTY.md).
+
+TRADEMARKS
+
+Keephaven(TM) and the Keephaven logo are trademarks of Keephaven LLC.
+Neither the AGPL nor a commercial license grants any right to use them.

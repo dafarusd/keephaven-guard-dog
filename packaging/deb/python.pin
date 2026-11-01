@@ -1,0 +1,12 @@
+# The Python the .deb carries: python-build-standalone (github.com/astral-sh/python-build-standalone), checked
+# against the release's SHA256SUMS on 2026-10-30. A release at least two weeks old, CPython 3.12 for both arches.
+PBS_TAG=20261013
+PY_VERSION=3.12.15
+amd64 cpython-3.12.15+20261013-x86_64-unknown-linux-gnu-install_only.tar.gz 5d546fc004fc2435fa142eb8f42ed8de5eb4725963dc22f7e6671014a80eb560
+arm64 cpython-3.12.15+20261013-aarch64-unknown-linux-gnu-install_only.tar.gz 34a43010cc05982d8b5debbad7d09f7b1200117ebf018f7acfd656895e408205
+# python-licenses/ holds the license texts of what that Python links in (OpenSSL, SQLite, libffi, ...). The
+# install_only archive leaves them out, so they come from the same release's pgo+lto-full archives (x86_64 sha256
+# dfb784f8d467e0c64c16d67a151c9145e64a0a11caa0ff699bc92899898cbb52, aarch64
+# 61f2cf59139a23d20ec7f529fabe570efa888b61ab411e04287eaec66ad79644, both matching SHA256SUMS on 2026-10-31; the 19
+# files are identical for both; python-licenses.sha256 pins each one). The build copies them to
+# /opt/keephaven-guard-dog/python/licenses.

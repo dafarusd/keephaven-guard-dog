@@ -1,0 +1,25 @@
+#!/bin/sh
+# "Remove Keephaven Guard Dog" (apps menu). Runs as the person at the screen, so its dialogs reach the desktop: asks
+# first, then hands the removal to bin/remove-root through pkexec, which asks for the computer's password.
+# apt deletes this file while it runs, so the whole body is one function the shell has read before it starts, and
+# after pkexec returns it only calls zenity.
+main() {
+    PATH=/usr/bin:/bin
+    export PATH
+    title="Remove Keephaven Guard Dog"
+    zenity --question --no-markup --title="$title" --ok-label=Remove --cancel-label=Cancel \
+        --text="Remove Keephaven Guard Dog from this computer? Your people and findings stay." || return 0
+    rc=0
+    out=$(pkexec /opt/keephaven-guard-dog/bin/remove-root 2>&1) || rc=$?
+    case "$rc" in
+        0) zenity --info --no-markup --title="$title" \
+               --text="Keephaven Guard Dog is removed. Your people and findings are still on this computer; installing it again picks them up." ;;
+        126|127) zenity --info --no-markup --title="$title" --text="Not removed: the computer's password wasn't given." ;;
+        3) zenity --error --no-markup --title="$title" \
+               --text="Not removed: another program is installing or updating software right now. Close it or wait for it to finish, then try again." ;;
+        *) zenity --error --no-markup --title="$title" --text="Not removed: $(printf '%s\n' "$out" | tail -n 1)" ;;
+    esac
+    return 0
+}
+main
+exit $?

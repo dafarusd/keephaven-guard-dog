@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+if [ "$1" = "configure" ]; then
+    if ! getent passwd keephaven-guard-dog >/dev/null; then
+        adduser --system --group --home /var/lib/keephaven-guard-dog --no-create-home \
+            --gecos "Keephaven Guard Dog" keephaven-guard-dog >/dev/null
+    fi
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload
+        systemctl enable keephaven-guard-dog.service >/dev/null 2>&1
+        systemctl restart keephaven-guard-dog.service
+    fi
+fi
+exit 0

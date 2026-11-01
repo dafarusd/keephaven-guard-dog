@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.egg-info/
+/data/
+.coverage
+coverage-contexts.json
+build/

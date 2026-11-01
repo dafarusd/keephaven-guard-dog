@@ -1,0 +1,5 @@
+[run]
+branch = True
+source = guard_dog
+dynamic_context = test_function
+concurrency = thread,greenlet

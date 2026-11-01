@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Remove Keephaven Guard Dog
+Comment=Remove the app; your people and findings stay
+Exec=/opt/keephaven-guard-dog/bin/remove-app
+Icon=edit-delete
+Terminal=false
+Categories=Settings;Security;
