@@ -1132,3 +1132,73 @@ class SiteIsolationBrowser(unittest.TestCase):
         flags = [f for f in scanner.BROWSER_LIMITS["extra_flags"]
                  if f != "--disable-site-isolation-trials" and not f.startswith("--isolate-origins=")]
         self.assertGreaterEqual(self.load(flags)[0], self.FRAMES + 2)
+
+
+class SweepRows(Base):
+    """A page the web sweep finds on a people-search site isn't one of that site's search addresses: supersede()
+    must leave it alone, or it's hidden and brought back every scan and a listing that went away never counts as gone."""
+    PROFILE = "https://www.spokeo.com/Jane-Doe/Ohio/Columbus/p000000001"
+
+    def setUp(self):
+        super().setUp()
+        from guard_dog import sweep
+        from guard_dog.brokers import BROKERS, search_urls
+        self.sweep = sweep
+        self.spokeo = next(b for b in BROKERS if b["id"] == "spokeo")
+        self.searched = {u for b in BROKERS for u, _, _ in search_urls(b, self.db.person(self.pid))}
+        self.search = search_urls(self.spokeo, self.db.person(self.pid))[0][0]
+        self.hit = dict(url=self.PROFILE, domain="spokeo.com", name="Jane Doe", place="Columbus, OH")
+
+    def one_scan(self, sweep_status):
+        """The order run() keeps: people-search phase, supersede(), web sweep. Returns this scan's alerts."""
+        before = self.db.q("SELECT COALESCE(MAX(id), 0) n FROM alerts")[0]["n"]
+        scanner.record(self.db, self.pid, self.spokeo, self.search, "not found", [], None)
+        scanner.supersede(self.db, self.pid, self.searched)
+        self.assertNotEqual(self.status(self.PROFILE), "superseded")
+        scanner.record(self.db, self.pid, self.sweep.source_for(self.hit), self.PROFILE, sweep_status, [], None)
+        return [a["text"] for a in self.db.q("SELECT text FROM alerts WHERE id > ?", (before,))]
+
+    def status(self, url):
+        r = self.db.q("SELECT status FROM findings WHERE url=?", (url,))
+        return r[0]["status"] if r else None
+
+    def test_a_sweep_page_is_never_superseded_and_gone_takes_two_scans(self):
+        self.assertEqual(self.one_scan("listed"), ["Spokeo: new listing found."])
+        self.assertEqual(self.one_scan("listed"), [])
+        self.assertEqual(self.one_scan("not found"),
+                         ["Spokeo no longer shows the listing; proven when the next scan agrees."])
+        self.assertEqual(self.one_scan("not found"),
+                         ["Spokeo: the listing is gone (two scans in a row didn't find it)."])
+        self.assertEqual(self.one_scan("not found"), [])
+        rows = {r["url"]: (r["kind"], r["status"]) for r in self.rows()}
+        self.assertEqual(rows, {self.search: ("broker", "not found"), self.PROFILE: ("broker-web", "not found")})
+
+    def test_an_older_sweep_row_tagged_broker_heals_on_its_next_check(self):
+        scanner.record(self.db, self.pid, dict(self.spokeo, kind="broker"), self.PROFILE, "listed", [], None)
+        scanner.supersede(self.db, self.pid, self.searched)  # what a 0.1.0 scan did to it
+        self.assertEqual(self.status(self.PROFILE), "superseded")
+        scanner.record(self.db, self.pid, self.sweep.source_for(self.hit), self.PROFILE, "listed", [], None)
+        scanner.supersede(self.db, self.pid, self.searched)
+        r = self.db.q("SELECT kind, status FROM findings WHERE url=?", (self.PROFILE,))[0]
+        self.assertEqual((r["kind"], r["status"]), ("broker-web", "listed"))
+
+    def test_the_sweep_skips_a_search_address_it_just_checked(self):
+        from guard_dog.brokers import BROKERS, search_urls
+        self.db.set("delay_min", "0")
+        self.db.set("delay_max", "0")
+        self.db.set("stealth", "0")
+        plain = next(b for b in BROKERS if not b["blocks_bots"] and search_urls(b, self.db.person(self.pid)))
+        url = search_urls(plain, self.db.person(self.pid))[0][0]
+        hits = [dict(url=url, domain=self.sweep.urlsplit(url).netloc.lower().removeprefix("www."), name="Jane Doe",
+                     place="", query='"x"', engine="bing")]
+        fetched = []
+
+        def fake_fetch(u, db, st=None, solve=False):
+            fetched.append(u)
+            return 200, NOBODY, NOBODY, "fake", ""
+        with mock.patch.object(scanner, "fetch", fake_fetch), \
+                mock.patch.object(scanner.sweep, "search", return_value=(hits, {})), \
+                mock.patch.object(scanner.breaches, "xposedornot", return_value=[]):
+            scanner.run(self.db, self.pid)
+        self.assertEqual(fetched.count(url), 1)
+        self.assertEqual(self.db.q("SELECT kind FROM findings WHERE url=?", (url,))[0]["kind"], "broker")

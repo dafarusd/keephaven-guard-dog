@@ -230,15 +230,27 @@ class Dashboard(WebServer):
         self.submit("Save")
         self.assertIn("Saved.", p.content())
         self.assertEqual([self.db.get(k) for k in ("stealth", "rescan_hours", "workers", "stealth_workers",
-                                                   "removal_email")], ["1", "12.0", "3", "3", "removals@example.com"])
+                                                   "removal_email")], ["1", "12", "3", "3", "removals@example.com"])
         p.goto(self.base + "/settings")
         self.assertTrue(p.is_checked("input[name=stealth]"))
         o = {"Origin": self.base, "Content-Type": "application/x-www-form-urlencoded",
              "Cookie": "; ".join(f"{c['name']}={c['value']}" for c in self.ctx.cookies())}
         self.raw("/settings", "rescan_hours=inf&delay_min=nan&workers=0&sweep_limit=-5&stealth_workers=99", o)
-        self.assertEqual(self.db.get("rescan_hours"), "12.0")
+        self.assertEqual(self.db.get("rescan_hours"), "12")
         self.raw("/settings", "rescan_hours=0.25", o)
-        self.assertEqual(self.db.get("rescan_hours"), "1.0")
+        self.assertEqual(self.db.get("rescan_hours"), "1")
+        # half up to each field's step, no trailing ".0" (the browser refuses a value off the step)
+        for form, want in (("rescan_hours=1.5&delay_min=0.3&delay_max=2.5", ("2", "0.5", "2.5")),
+                           ("rescan_hours=2.5&delay_min=0&delay_max=6", ("3", "0", "6")),
+                           ("rescan_hours=0&delay_min=1.25&delay_max=120", ("0", "1.5", "120")),
+                           ("rescan_hours=720", ("720", "1.5", "120"))):
+            self.raw("/settings", form, o)
+            self.assertEqual([self.db.get(k) for k in ("rescan_hours", "delay_min", "delay_max")], list(want), form)
+        for k, v in (("rescan_hours", "6.0"), ("delay_min", "2.0"), ("delay_max", "2.5")):
+            self.db.set(k, v)  # what 0.1.0 saved
+        p.goto(self.base + "/settings")
+        self.assertEqual([p.input_value(f"input[name={k}]") for k in ("rescan_hours", "delay_min", "delay_max")],
+                         ["6", "2", "2.5"])
         self.assertEqual(self.db.get("workers"), "1")
         self.assertEqual(self.db.get("sweep_limit"), "0")
         self.assertEqual(self.db.get("stealth_workers"), "4")

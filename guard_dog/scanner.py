@@ -610,7 +610,7 @@ def record(db, pid, b, url, status, matched, copy):
         db.x("""INSERT INTO findings(person, source, url, status, matched, copy, first_seen, last_seen, last_checked,
                 check_note, kind) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(person, source, url) DO UPDATE SET
                 status=excluded.status, copy=COALESCE(excluded.copy, findings.copy), last_checked=excluded.last_checked,
-                check_note=excluded.check_note""",
+                check_note=excluded.check_note, kind=excluded.kind""",
              (pid, source, url, status, "", copy, now, now, now, note, b.get("kind", "broker")))
         return
     was = old["status"] if old else None
@@ -639,7 +639,7 @@ def record(db, pid, b, url, status, matched, copy):
             check_note, ever_listed, kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(person, source, url) DO UPDATE SET status=excluded.status, matched=excluded.matched,
             copy=COALESCE(excluded.copy, findings.copy), last_seen=excluded.last_seen,
-            last_checked=excluded.last_checked, check_note=excluded.check_note,
+            last_checked=excluded.last_checked, check_note=excluded.check_note, kind=excluded.kind,
             ever_listed=MAX(findings.ever_listed, excluded.ever_listed)""",
          (pid, source, url, status, note, copy, now, now, now, keep, int(status == "listed"), b.get("kind", "broker")))
 
@@ -801,7 +801,8 @@ def run(db, pid):
             db.alert(pid, f"people-search check failed ({it[0]['name'] if isinstance(it, tuple) else it}): {why}")
         if cancelled():
             return
-        supersede(db, pid, {u for b in BROKERS for u, _, _ in search_urls(b, person)})
+        searched = {u for b in BROKERS for u, _, _ in search_urls(b, person)}
+        supersede(db, pid, searched)
         refetch_details(db, pid, prog)
 
         if db.get("sweep") != "0":
@@ -811,6 +812,7 @@ def run(db, pid):
             for eng, why in failed.items():
                 kinds = ", ".join(sorted(set(why)))
                 db.alert(pid, f"web search: {eng} failed {len(why)} of {per} searches ({kinds}); the sweep missed what it would have found.")
+            hits = [h for h in hits if h["url"] not in searched]  # checked minutes ago as a search address
             known = {r["url"] for r in db.q("SELECT url FROM findings WHERE person=?", (pid,))}
             todo = ([h for h in hits if h["url"] not in known] + [h for h in hits if h["url"] in known])[:limit]
             by_site = {}

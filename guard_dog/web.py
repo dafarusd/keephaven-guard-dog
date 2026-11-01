@@ -16,6 +16,7 @@ import time
 import urllib.parse
 from pathlib import Path
 from collections import Counter
+from datetime import date
 
 from . import __version__, accounts, archive, breaches, browser, inbox, removal, requests, scanner, sweep
 from .optouts import SCRIPTS
@@ -74,14 +75,14 @@ def page(title, body, nav=True):
             f"<header><b>Keephaven Guard Dog</b>{links}</header><main>{body}</main></body></html>")
 
 
-def when(ts):
+def when(ts, now=None):
     """'today 1:50 pm', 'yesterday 7:05 am', 'Oct 27', or 'never'."""
     if not ts:
         return "never"
-    t, now = time.localtime(ts), time.localtime()
+    t, now = time.localtime(ts), time.localtime(time.time() if now is None else now)
     clock = time.strftime("%I:%M %p", t).lstrip("0").lower()
-    days = (time.mktime(time.strptime(time.strftime("%Y-%m-%d", now), "%Y-%m-%d"))
-            - time.mktime(time.strptime(time.strftime("%Y-%m-%d", t), "%Y-%m-%d"))) // 86400
+    # calendar days, not seconds: the day the clocks change is 23 or 25 hours long
+    days = date(*now[:3]).toordinal() - date(*t[:3]).toordinal()
     if days == 0:
         return f"today {clock}"
     if days == 1:
@@ -119,6 +120,19 @@ def bounded(v, top):
     except (TypeError, ValueError):
         return None
     return min(max(f, 0.0), top) if math.isfinite(f) else None
+
+
+def plain_number(v, step):
+    """A Schedule number as it's saved and shown: rounded half up to the field's step, with no trailing ".0" (the
+    browser refuses a value off the field's step, and "6.0" hours reads oddly)."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return v or ""
+    if not math.isfinite(f):
+        return v
+    n = math.floor(f / step + 0.5) * step
+    return str(int(n)) if n == int(n) else str(n)
 
 
 def source_info(r):
@@ -1099,9 +1113,9 @@ of memory (about one per 2 GB free).</div>
 <h2 style="margin-top:18px">Schedule</h2>
 <label>Watch: re-scan every (hours)</label><div class=k>Guard Dog keeps watch around the clock and re-scans each person
 this often (1 to 720). 0 = only when you press Scan.</div>
-<input name=rescan_hours type=number min=0 max=720 step=1 value="{e(g('rescan_hours'))}">
+<input name=rescan_hours type=number min=0 max=720 step=1 value="{e(plain_number(g('rescan_hours'), 1))}">
 <label>Wait between requests (seconds, min and max)</label>
-<div class=row><input name=delay_min type=number min=0 step=0.5 value="{e(g('delay_min'))}"><input name=delay_max type=number min=0 step=0.5 value="{e(g('delay_max'))}"></div>
+<div class=row><input name=delay_min type=number min=0 step=0.5 value="{e(plain_number(g('delay_min'), 0.5))}"><input name=delay_max type=number min=0 step=0.5 value="{e(plain_number(g('delay_max'), 0.5))}"></div>
 <h2 style="margin-top:18px">Removals</h2>
 <label>Removal email</label><div class=k>The address you give opt-out forms and send removal emails from. Use a
 separate address, only for this: sites learn it's real, and Guard Dog sends from it.</div>
@@ -1138,7 +1152,8 @@ paid key it uses Have I Been Pwned instead.</div><input name=hibp_key type=passw
                     v = 1.0  # the watch never runs more often than hourly
                 if v is not None:
                     db.set(k, str(int(max(v, 1 if k in ("workers", "stealth_workers") else 0)))
-                           if k in ("sweep_limit", "workers", "stealth_workers") else str(v))
+                           if k in ("sweep_limit", "workers", "stealth_workers")
+                           else plain_number(v, 1 if k == "rescan_hours" else 0.5))
             want = "1" if f.get("network") == "1" else "0"
             if NETWORK_SWITCH and want != db.get("network"):
                 db.set("network", want)

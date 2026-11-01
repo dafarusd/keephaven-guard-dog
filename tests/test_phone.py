@@ -1,5 +1,6 @@
 """The dashboard at phone width (390 px) in real Chromium: no sideways scrolling, plain status words, a summary
 sentence that is true in every state, and counts that match the database."""
+import os
 import re
 import tempfile
 import threading
@@ -179,3 +180,39 @@ class Times(unittest.TestCase):
         self.assertTrue(web.when(now - 86400).startswith("yesterday "))
         self.assertTrue(web.when(now + 86400).startswith("tomorrow "))
         self.assertRegex(web.when(now - 10 * 86400), r"^[A-Z][a-z]{2} \d{1,2}$")
+
+
+class ClockChange(unittest.TestCase):
+    """The day the clocks change is 23 or 25 hours long; 'tomorrow' and 'yesterday' count calendar days."""
+
+    def setUp(self):
+        old = os.environ.get("TZ")
+        os.environ["TZ"] = "America/New_York"
+        time.tzset()
+
+        def restore():
+            if old is None:
+                os.environ.pop("TZ", None)
+            else:
+                os.environ["TZ"] = old
+            time.tzset()
+        self.addCleanup(restore)
+
+    @staticmethod
+    def at(y, m, d, h):
+        return time.mktime((y, m, d, h, 0, 0, 0, 0, -1))
+
+    def test_fall_back(self):
+        self.assertTrue(web.when(self.at(2026, 11, 2, 9), now=self.at(2026, 11, 1, 12)).startswith("tomorrow "))
+        self.assertTrue(web.when(self.at(2026, 11, 1, 9), now=self.at(2026, 11, 2, 12)).startswith("yesterday "))
+
+    def test_spring_forward(self):
+        self.assertTrue(web.when(self.at(2026, 3, 9, 9), now=self.at(2026, 3, 8, 12)).startswith("tomorrow "))
+        self.assertTrue(web.when(self.at(2026, 3, 8, 9), now=self.at(2026, 3, 9, 12)).startswith("yesterday "))
+
+    def test_a_plain_day(self):
+        now = self.at(2026, 10, 14, 12)
+        self.assertEqual(web.when(self.at(2026, 10, 14, 9), now=now), "today 9:00 am")
+        self.assertEqual(web.when(self.at(2026, 10, 15, 9), now=now), "tomorrow 9:00 am")
+        self.assertEqual(web.when(self.at(2026, 10, 13, 21), now=now), "yesterday 9:00 pm")
+        self.assertEqual(web.when(self.at(2026, 10, 4, 9), now=now), "Oct 4")

@@ -203,6 +203,20 @@ METAINFO = DEB / "co.keephaven.GuardDog.metainfo.xml"
 class AppStream(unittest.TestCase):
     """Software (Debian) and App Center (Ubuntu) list, find and remove only apps that have AppStream data."""
 
+    def test_one_version_everywhere(self):
+        """The .deb takes its version from __init__.py; Software shows the newest <release>: a half bump ships a
+        0.1.1 package that says 0.1.0."""
+        import re
+        import tomllib
+        import xml.etree.ElementTree as ET
+        root = DEB.parent.parent
+        code = re.search(r'__version__ = "(.*)"', (root / "guard_dog" / "__init__.py").read_text()).group(1)
+        project = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+        newest = ET.parse(METAINFO).getroot().find("releases/release").get("version")
+        self.assertEqual((project, newest), (code, code))
+        self.assertIn(f"keephaven-guard-dog_{code}_amd64.deb", (root / "README.md").read_text())
+        self.assertIn(f"keephaven-guard-dog_{code}_arm64.deb", (root / "README.md").read_text())
+
     def test_names_the_app_the_menu_entry_launches(self):
         import xml.etree.ElementTree as ET
         root = ET.parse(METAINFO).getroot()

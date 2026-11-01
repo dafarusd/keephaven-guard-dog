@@ -149,7 +149,7 @@ class Search(unittest.TestCase):
 
     def test_source_for(self):
         b = sweep.source_for({"domain": "spokeo.com"})
-        self.assertEqual((b["id"], b["kind"]), ("spokeo", "broker"))
+        self.assertEqual((b["id"], b["kind"]), ("spokeo", "broker-web"))
         w = sweep.source_for({"domain": "blog.example"})
         self.assertEqual((w["id"], w["kind"], w["optout"]), ("blog.example", "web", sweep.GOOGLE_RAY))
 

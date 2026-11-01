@@ -7,8 +7,8 @@ people you add and what it finds stay on that computer; only the searches go out
 
 Download the file for your computer from the Releases page:
 
-- `keephaven-guard-dog_0.1.0_amd64.deb` for a normal 64-bit PC (133 MB)
-- `keephaven-guard-dog_0.1.0_arm64.deb` for a Raspberry Pi 5 with 8 GB running 64-bit Raspberry Pi OS (119 MB) — a Pi 4 hasn't been tried
+- `keephaven-guard-dog_0.1.1_amd64.deb` for a normal 64-bit PC (133 MB)
+- `keephaven-guard-dog_0.1.1_arm64.deb` for a Raspberry Pi 5 with 8 GB running 64-bit Raspberry Pi OS (119 MB) — a Pi 4 hasn't been tried
 
 On Ubuntu, right-click the file, choose Open With…, pick App Center and press Open. (Double-clicking it opens it
 as an archive instead.) On Debian, double-click it and Software opens. On Raspberry Pi OS, right-click the file

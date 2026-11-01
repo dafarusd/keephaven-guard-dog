@@ -199,9 +199,10 @@ def search(db, person, prog, pause, cancelled, workers=6, browsers=None):
 
 
 def source_for(hit):
-    """Known people-search site → its own opt-out; anything else → generic takedown steps."""
+    """Known people-search site → its own opt-out; anything else → generic takedown steps. A page found on a
+    people-search site is "broker-web", not "broker": it isn't one of the search addresses supersede() retires."""
     b = BROKER_HOSTS.get(hit["domain"])
     if b:
-        return dict(b, kind="broker", checked="sweep")
+        return dict(b, kind="broker-web", checked="sweep")
     return dict(id=hit["domain"], name=hit["domain"], kind="web", checked="sweep", blocks_bots=False,
                 optout=GOOGLE_RAY, how=GENERIC_HOW)
